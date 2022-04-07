@@ -4,6 +4,6 @@
 - `cd live-server`
 - `yarn install`
 - edit the port etc in `index.js`
-- `yarn`
+- `yarn start`
 
 Then edit the `public/index.html` file and see results in the browser.
