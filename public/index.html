@@ -5,6 +5,93 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Live server</title>
+    <script src="https://unpkg.com/ua-parser-js@0.7.19/dist/ua-parser.min.js"></script>
+
+
+    <script>
+      //      let types = {
+      //        "ua": "ua",
+      //        "n-uad-entropy": "n-uad-entropy",
+      //        "n-uad": "n-uad",
+      //        "np": "np",
+      //        "noop": "noop",
+      //      }
+
+      let techniques = {
+        "n-uad-entropy": {
+          getter: () => window.navigator?.userAgentData.getHighEntropyValues([
+            "architecture",
+            "bitness",
+            "model",
+            "platformVersion",
+          ])
+            .then(t => ({
+              type: "n-uad-entropy",
+              data: t
+            })),
+          getOs: data => data.platform,
+        },
+        "n-uad": {
+          getter: () => ({
+            type: "n-uad",
+            data: window.navigator.userAgentData,
+          }),
+          getOs: data => data.platform,
+        },
+        "np": {
+          getter: () => ({
+            type: "np",
+            data: window.navigator.platform,
+          }),
+          getOs: data => data,
+        },
+        "ua": {
+          getter:  () => ({
+            type: "ua",
+            data: new UAParser().getResult(),
+          }),
+          getOs: data => data.os.name,
+        },
+        "noop": {
+          getter: () => ({
+            data: null,
+            type: "noop",
+          }),
+          getOs: data => null,
+        },
+      };
+
+      let typesSupport = {
+        "ua": true,
+        "noop": true,
+        "np": false && !!window.navigator.platform,
+        "n-uad": false && !!window.navigator.userAgentData.platform,
+        "n-uad-entropy": false && !!window.navigator?.userAgentData.getHighEntropyValues
+      };
+
+
+      function __inferDeviceInfo() {
+        for (let [type, {getter}] of Object.entries(techniques)) {
+          if (typesSupport[type]) {
+            return getter();
+          }
+        }
+      }
+
+      function inferDeviceInfo() {
+        return Promise.resolve(__inferDeviceInfo())
+      }
+
+      inferDeviceInfo().then(result => {
+        console.group("os detection");
+        console.log('OS:', techniques[result.type].getOs(result.data));
+        console.log('Detection type:', result.type);
+        console.log('Result data:', result.data);
+        console.groupEnd("os detection");
+      }, console.error);
+
+
+    </script>
 </head>
 <body>
 <h2>Hello, world!</h2>
